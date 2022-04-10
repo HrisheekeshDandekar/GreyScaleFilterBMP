@@ -61,7 +61,7 @@ int main(int argc, char** argv)
 	FILE* original;
 	FILE* to_create;
 
-	if (!open_files(original, to_create, argv[0])) { return 1; }
+	if (!open_files(original, to_create, argv[1])) { return 1; }
 		
 	if (!file_is_bmp(original)) { return 1; } 
 
