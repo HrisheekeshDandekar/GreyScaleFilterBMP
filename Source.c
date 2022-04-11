@@ -130,17 +130,17 @@ bool open_files(FILE* original, FILE* to_create, char* original_name)
 
 char* new_file_name (char* original_name)
 {
-	//Add suffix _bx by creating new char array with original size +2 len
-	char* new_name;
-	new_name = (char*)malloc((strlen(original_name) + 3) * sizeof(char));
-	
-	//Copying as it is
-	strcpy(new_name, original_name);
-	
-	//Adding suffix
-	strcpy(new_name[strlen(new_name) - 4], "_bm.bmp");
+    //Add suffix _bx by creating new char array with original size +2 len
+    char* new_name;
+    new_name = (char*)malloc((strlen(original_name) + 3) * sizeof(char));
 
-	return new_name;
+    //Copying as it is
+    strcpy(new_name, original_name);
+
+    //Adding suffix
+    strcpy(&new_name[strlen(new_name) - 4], "_bm.bmp");
+
+    return new_name;
 }
 
 bool file_is_bmp (FILE* fp)
