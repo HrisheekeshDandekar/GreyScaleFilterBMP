@@ -1,3 +1,4 @@
+//Copying header to new file created
 /*
  *    Code to take in a BMP name in the same directory as a command line argument to main
  *
@@ -16,6 +17,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdint.h>
 
 bool arguments_to_main_validation (int argc, char** argv);
 bool open_files (FILE* original, FILE* to_create, char* original_name);
@@ -23,6 +25,7 @@ char* new_file_name (char* original_name);
 bool file_is_bmp (FILE* fp);
 long bitmap_start (FILE* fp);
 long bitmap_end (FILE* fp);
+bool read_headers (FILE* fp, Bitmap_file_header* BMP_header, DIB_header* DIB_Header);
 bool apply_greyscale (FILE* fp);
 void status_printed ();
 
@@ -35,8 +38,10 @@ typedef struct Errors {
 	int arguments_err;
 	int arg_name_err;
 	int fopen_new;
+	int not_bmp;
+	int headers_err;
 	
-	char msgs[8][100];
+	char msgs[10][100];
 } Error_msgs;
 
 Error_msgs code_errors = {
@@ -47,7 +52,9 @@ Error_msgs code_errors = {
 		.fclose_final = 0,
 		.arguments_err = 0,
 		.arg_name_err = 0,
-	
+		.not_bmp = 0;
+		.headers_err = 0;
+			
 		.msgs[0] = "---[ Error Opening original image ]---\n",		
 		.msgs[1] = "---[ Error createing file with suffix _bw ]---\n(make sure file does not exist)\n",		
 		.msgs[2] = "---[ Failed to apply Fileter ]---\n",		
@@ -56,9 +63,28 @@ Error_msgs code_errors = {
 		.msgs[5] = "---[ Wrong arguments passed ]---\nUsage: ./program_name image_name.bmp\n"
 		.msgs[6] = "---[ Bad name passed ]---\nUsage: ./program_name image_name.bmp\n"
 		.msgs[7] = "---[ Could not create new output file ]---\n"
+		.msgs[8] = "---[ File is not a BMP ]---\n"
+		.msgs[9] = "---[ Error Reading Header/s ]---\n"
 	};
 
+#pragma pack(push, 0)	//making sure padding is disabled for reading headers
+typedef struct Bitmap_file_header {
+	char identifier[2];
+	int32_t bmp_size;
+	char reserved1[2];
+	char reserved2[2];
+	int32_t pixal_arr_start;
+} Bitmap_file_header;
  
+typedef struct DIB_header {
+	int32_t header_size;    // Should be 12 bytes
+	int16_t bitmap_width;
+	int16_t bitmap_height;
+	int16_t color_planes;
+	int16_t bits_per_pixal;
+} DIB_header;
+#pragma pack(pop)	//Re-enable padding for performance
+
 int main(int argc, char** argv)
 {
 	//Print the correct error/success msg whenever program exits
@@ -146,8 +172,52 @@ char* new_file_name (char* original_name)
 bool file_is_bmp (FILE* fp)
 {
 	//check if the file is actually an bmp file
+	//Approach: Check first 2 bytes are BM in ascii
+	char expected_bytes[2];
 	
 	//If not , set the correct error codes and return false
+	if (fread(expected_bytes, sizeof(char), 2, fp) != 2)
+	{
+		code_errors.not_bmp = 1;	
+		return false;
+	}
+	if (strcmp(expected_bytes, "BM"))
+	{
+		code_errors.not_bmp = 1;
+		return false;
+	}
+
+	//Setting file cursor back to start
+	fseek(fp, 0, SEEKSET);
+
+	//Checkes passed
+	return true;	
+}
+
+bool apply_greyscale (FILE* fp)
+{
+	//Reading headers
+	Bitmap_file_header BMP_header;
+	DIB_header DIB_Header;
+	if (!read_headers(fp, &BMP_header, &DIB_Header))
+	{
+		code_errors.headers_err = 1;
+		return false;
+	}
+	
+	//Copying header to new file created
+	//Apply the greyscale filter to the whole bitmap
+	//Formula : Grayscale = 0.299R + 0.587G + 0.114B.
+	
+	//Find bitmap size 
+	//Find start position
+	//Find end position
+	//Itterate through the bitmap and convert every pixal
+}
+
+bool read_headers (FILE* fp, Bitmap_file_header* BMP_header, DIB_header* DIB_Header)
+{
+
 }
 
 long bitmap_start (FILE* fp)
@@ -160,16 +230,6 @@ long bitmap_end (FILE* fp)
 	//Return the end address of the bitmap position as a long
 }
 
-bool apply_greyscale (FILE* fp)
-{
-	//Apply the greyscale filter to the whole bitmap
-	//Formula : Grayscale = 0.299R + 0.587G + 0.114B.
-	
-	//Find bitmap size 
-	//Find start position
-	//Find end position
-	//Itterate through the bitmap and convert every pixal
-}
 
 void status_printed()
 {
