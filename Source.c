@@ -98,9 +98,9 @@ int main(int argc, char** argv)
 
 	if (!open_files(original, to_create, argv[1]))		{ return 1; }
 		
-	if (!file_is_bmp(original))							{ return 1; } 
+	if (!file_is_bmp(original))				{ return 1; } 
 
-	if (!apply_greyscale(original))						{ return 1; }
+	if (!apply_greyscale(original))				{ return 1; }
 
 	return 0;
 }
